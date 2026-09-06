@@ -12,6 +12,8 @@
 </head>
 <body>
 
+  <canvas id="bgField" aria-hidden="true"></canvas>
+
   <header class="top">
     <a class="brand" href="#top">
       <span class="brand-name">WASSIM MESSAIF</span>
@@ -221,6 +223,145 @@
       });
       window.addEventListener('scroll', syncSeeMore, { passive: true });
       syncSeeMore();
+
+      // ---------- interactive background field ----------
+      var bg = document.getElementById('bgField');
+      var ctx = bg.getContext('2d');
+      var W = 0, H = 0;
+      var blobs = [];
+      var rings = [];
+      var mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function sizeField() {
+        var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        W = window.innerWidth;
+        H = window.innerHeight;
+        bg.width = Math.round(W * dpr);
+        bg.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function spawnBlob() {
+        var pick = Math.random();
+        var col = pick < 0.62 ? '178,107,255' : (pick < 0.82 ? '213,255,47' : '124,58,237');
+        var r = 36 + Math.random() * 88;
+        var g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+        g.addColorStop(0, 'rgba(' + col + ',' + (0.10 + Math.random() * 0.20) + ')');
+        g.addColorStop(1, 'rgba(' + col + ',0)');
+        return {
+          x: Math.random() * W, y: Math.random() * H,
+          vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6,
+          r: r, g: g
+        };
+      }
+
+      function seedField() {
+        sizeField();
+        blobs.length = 0;
+        var n = Math.max(14, Math.min(42, Math.round((W * H) / 62000)));
+        for (var i = 0; i < n; i++) blobs.push(spawnBlob());
+        if (reduced) drawStatic();
+      }
+
+      function drawStatic() {
+        ctx.clearRect(0, 0, W, H);
+        for (var i = 0; i < blobs.length; i++) {
+          var b = blobs[i];
+          ctx.save();
+          ctx.translate(b.x, b.y);
+          ctx.fillStyle = b.g;
+          ctx.beginPath();
+          ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      window.addEventListener('pointermove', function (e) {
+        mouse.tx = e.clientX; mouse.ty = e.clientY;
+      }, { passive: true });
+
+      window.addEventListener('pointerdown', function (e) {
+        rings.push({ x: e.clientX, y: e.clientY, r: 10, vr: 10, a: 0.55 });
+        for (var i = 0; i < blobs.length; i++) {
+          var b = blobs[i];
+          var dx = b.x - e.clientX, dy = b.y - e.clientY;
+          var d = Math.sqrt(dx * dx + dy * dy) || 1;
+          if (d < 300) {
+            var f = (1 - d / 300) * 7;
+            b.vx += (dx / d) * f;
+            b.vy += (dy / d) * f;
+          }
+        }
+      }, { passive: true });
+
+      function frame() {
+        mouse.x += (mouse.tx - mouse.x) * 0.07;
+        mouse.y += (mouse.ty - mouse.y) * 0.07;
+        ctx.clearRect(0, 0, W, H);
+
+        for (var i = 0; i < blobs.length; i++) {
+          var b = blobs[i];
+          var dx = b.x - mouse.x, dy = b.y - mouse.y;
+          var d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 190 && d > 0) {
+            var f = (1 - d / 190) * 1.1;
+            b.vx += (dx / d) * f;
+            b.vy += (dy / d) * f;
+          }
+          b.vx *= 0.985; b.vy *= 0.985;
+          b.x += b.vx; b.y += b.vy;
+          if (b.x < -b.r) b.x = W + b.r; else if (b.x > W + b.r) b.x = -b.r;
+          if (b.y < -b.r) b.y = H + b.r; else if (b.y > H + b.r) b.y = -b.r;
+        }
+
+        ctx.strokeStyle = 'rgba(178,107,255,0.5)';
+        ctx.lineWidth = 1;
+        for (var i2 = 0; i2 < blobs.length; i2++) {
+          for (var j = i2 + 1; j < blobs.length; j++) {
+            var A = blobs[i2], B = blobs[j];
+            var adx = A.x - B.x, ady = A.y - B.y;
+            var ad = Math.sqrt(adx * adx + ady * ady);
+            if (ad < 150) {
+              ctx.globalAlpha = (1 - ad / 150) * 0.4;
+              ctx.beginPath();
+              ctx.moveTo(A.x, A.y);
+              ctx.lineTo(B.x, B.y);
+              ctx.stroke();
+            }
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        for (var i3 = 0; i3 < blobs.length; i3++) {
+          var b2 = blobs[i3];
+          ctx.save();
+          ctx.translate(b2.x, b2.y);
+          ctx.fillStyle = b2.g;
+          ctx.beginPath();
+          ctx.arc(0, 0, b2.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        for (var k = rings.length - 1; k >= 0; k--) {
+          var r = rings[k];
+          r.r += r.vr; r.vr *= 0.97; r.a *= 0.95;
+          if (r.a < 0.02) { rings.splice(k, 1); continue; }
+          ctx.strokeStyle = 'rgba(213,255,47,' + r.a + ')';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        requestAnimationFrame(frame);
+      }
+
+      seedField();
+      window.addEventListener('resize', seedField);
+      if (!reduced) requestAnimationFrame(frame);
     })();
   </script>
 </body>
