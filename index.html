@@ -106,8 +106,8 @@
     <p>© 2026 WASSIM MESSAIF — ALL RIGHTS RESERVED</p>
   </footer>
 
-  <button class="seemore" id="seeMore" aria-label="Scroll to more content">
-    CLICK TO SEE MORE <span class="arr" aria-hidden="true">↓</span>
+  <button class="seemore" id="seeMore" aria-label="Click any image to expand it">
+    CLICK ANY IMAGE TO ZOOM <span class="arr" aria-hidden="true">⌕</span>
   </button>
 
   <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="Artwork viewer">
@@ -211,21 +211,13 @@
       }, { threshold: 0.12 });
       document.querySelectorAll('.rvl').forEach(function (el) { io.observe(el); });
 
-      var targets = [].slice.call(document.querySelectorAll('.hero, .work, .featured, .about'));
       var seeMore = document.getElementById('seeMore');
       function syncSeeMore() {
         var nearBottom = (window.innerHeight + window.scrollY) > (document.documentElement.scrollHeight - 200);
         seeMore.classList.toggle('done', nearBottom);
       }
       seeMore.addEventListener('click', function () {
-        var y = window.scrollY + 140;
-        var next = null;
-        targets.forEach(function (t) {
-          var top = t.getBoundingClientRect().top + window.scrollY;
-          if (top > y && (!next || top < next.getBoundingClientRect().top + window.scrollY)) next = t;
-        });
-        if (!next) next = targets[targets.length - 1];
-        next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('work').scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
       window.addEventListener('scroll', syncSeeMore, { passive: true });
       syncSeeMore();
