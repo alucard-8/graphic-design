@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 
@@ -21,6 +21,7 @@
     </a>
     <nav class="nav" aria-label="Sections">
       <a href="#work">WORK</a>
+      <a href="#games">GAMES</a>
       <a href="#featured">FEATURED</a>
       <a href="https://www.behance.net/mohamedmessaif" target="_blank" rel="noopener">BEHANCE ↗</a>
       <a href="https://www.instagram.com/wassim___draw/" target="_blank" rel="noopener">INSTAGRAM ↗</a>
@@ -38,16 +39,16 @@
       <p class="hero-sub rvl">WASSIM MESSAIF — visual identity, branding, posters, social media &amp; billboards. Bold work, made to stop the scroll.</p>
       <div class="hero-stats rvl">
         <div class="hstat"><b>52</b><span>designs</span></div>
+        <div class="hstat"><b>15</b><span>game graphics</span></div>
         <div class="hstat"><b>3</b><span>behance posts</span></div>
-        <div class="hstat"><b>∞</b><span>ideas</span></div>
       </div>
       <a class="hero-cta rvl" href="#work">VIEW THE WORK</a>
     </section>
 
     <div class="marquee" aria-hidden="true">
       <div class="marquee-track">
-        <span>BRANDING</span><i>◆</i><span>POSTERS</span><i>◆</i><span>LOGOS</span><i>◆</i><span>BILLBOARDS</span><i>◆</i><span>SOCIAL MEDIA</span><i>◆</i><span>MASCOTTES</span><i>◆</i>
-        <span>BRANDING</span><i>◆</i><span>POSTERS</span><i>◆</i><span>LOGOS</span><i>◆</i><span>BILLBOARDS</span><i>◆</i><span>SOCIAL MEDIA</span><i>◆</i><span>MASCOTTES</span><i>◆</i>
+        <span>BRANDING</span><i>◆</i><span>POSTERS</span><i>◆</i><span>LOGOS</span><i>◆</i><span>BILLBOARDS</span><i>◆</i><span>SOCIAL MEDIA</span><i>◆</i><span>GAME UI</span><i>◆</i><span>MASCOTTES</span><i>◆</i>
+        <span>BRANDING</span><i>◆</i><span>POSTERS</span><i>◆</i><span>LOGOS</span><i>◆</i><span>BILLBOARDS</span><i>◆</i><span>SOCIAL MEDIA</span><i>◆</i><span>GAME UI</span><i>◆</i><span>MASCOTTES</span><i>◆</i>
       </div>
     </div>
 
@@ -57,6 +58,14 @@
         <p class="sec-note rvl">Every piece in the archive — click any image for the full view.</p>
       </div>
       <div class="grid" id="grid"></div>
+    </section>
+
+    <section class="work" id="games">
+      <div class="sec-head">
+        <h2 class="sec-title rvl">GAME GRAPHICS &amp; UI</h2>
+        <p class="sec-note rvl">Interface screens, menus, icons and key art for games — click any image for the full view.</p>
+      </div>
+      <div class="grid" id="gameGrid"></div>
     </section>
 
     <section class="featured" id="featured">
@@ -144,6 +153,7 @@
         a.className = 'tile rvl';
         a.style.transitionDelay = ((i % 8) * 40) + 'ms';
         a.href = 'images/designs/' + name;
+        a.setAttribute('data-list', 'graphic');
         a.setAttribute('data-i', i);
         var img = document.createElement('img');
         img.src = a.href;
@@ -162,15 +172,52 @@
       });
       grid.appendChild(frag);
 
+      var GAMES = [
+        '1.png','a.png','banner.png','ember%20hunt.png','Frame%201.png','Frame%202.png','Frame%2030.png',
+        'game%20icon.png','game%20over.png','pause%20menu.png','settings.png','settings-1.png','void%20runner.png',
+        'thumbnail.png','thumbnail%201.png'
+      ];
+      var gameGrid = document.getElementById('gameGrid');
+      var gFrag = document.createDocumentFragment();
+      GAMES.forEach(function (name, i) {
+        var a = document.createElement('a');
+        a.className = 'tile rvl';
+        a.style.transitionDelay = ((i % 8) * 40) + 'ms';
+        a.href = 'images/games/' + name;
+        a.setAttribute('data-list', 'game');
+        a.setAttribute('data-i', i);
+        var img = document.createElement('img');
+        img.src = a.href;
+        img.alt = 'game graphics piece';
+        img.loading = 'lazy';
+        var no = document.createElement('span');
+        no.className = 'tile-no';
+        no.textContent = 'GAME ' + String(i + 1).padStart(2, '0');
+        var zo = document.createElement('span');
+        zo.className = 'tile-zoom';
+        zo.textContent = '⌕';
+        a.appendChild(img);
+        a.appendChild(no);
+        a.appendChild(zo);
+        gFrag.appendChild(a);
+      });
+      gameGrid.appendChild(gFrag);
+
       var lb = document.getElementById('lightbox');
       var lbImg = document.getElementById('lbImg');
       var lbCap = document.getElementById('lbCap');
       var cur = -1;
+      var lists = {
+        graphic: { path: 'images/designs/', items: PIECES, label: 'GRAPHIC' },
+        game:    { path: 'images/games/',    items: GAMES,   label: 'GAME' }
+      };
+      var listKey = 'graphic';
 
-      function open(i) {
+      function open(list, i) {
+        listKey = list;
         cur = i;
-        lbImg.src = 'images/designs/' + PIECES[i];
-        lbCap.textContent = 'GRAPHIC ' + String(i + 1).padStart(2, '0') + ' — ' + PIECES.length + ' PIECES';
+        lbImg.src = lists[list].path + lists[list].items[i];
+        lbCap.textContent = lists[list].label + ' ' + String(i + 1).padStart(2, '0') + ' — ' + lists[list].items.length + ' PIECES';
         lb.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
       }
@@ -181,14 +228,21 @@
       }
       function step(d) {
         if (cur < 0) return;
-        open((cur + d + PIECES.length) % PIECES.length);
+        var k = lists[listKey].items.length;
+        open(listKey, (cur + d + k) % k);
       }
 
       grid.addEventListener('click', function (e) {
         var tile = e.target.closest('.tile');
         if (!tile) return;
         e.preventDefault();
-        open(Number(tile.getAttribute('data-i')));
+        open(tile.getAttribute('data-list'), Number(tile.getAttribute('data-i')));
+      });
+      gameGrid.addEventListener('click', function (e) {
+        var tile = e.target.closest('.tile');
+        if (!tile) return;
+        e.preventDefault();
+        open(tile.getAttribute('data-list'), Number(tile.getAttribute('data-i')));
       });
       document.getElementById('lbClose').addEventListener('click', close);
       document.getElementById('lbPrev').addEventListener('click', function () { step(-1); });
